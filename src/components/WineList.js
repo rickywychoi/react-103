@@ -1,7 +1,8 @@
 import React, { Component } from 'react';
 import PropTypes from 'prop-types';
 import { Loader } from '.';
-import * as WinesService from '../services/Wines';
+import { fetchWinesFrom } from '../actions';
+import { connect } from 'react-redux';
 
 export class WineList extends Component {
   onSelectWine = (e, wineId) => {
@@ -10,9 +11,6 @@ export class WineList extends Component {
   };
 
   render() {
-    if (this.props.region === null) {
-      return null;
-    }
     return (
       <div className="col s12 m6 l4 offset-m3 offset-l4">
         <h2 className="center-align">Wines</h2>
@@ -22,7 +20,7 @@ export class WineList extends Component {
               key={wine.id}
               href="#!"
               onClick={e => this.onSelectWine(e, wine.id)}
-              className={['collection-item', wine.id === this.props.wine.id ? 'active' : ''].join(
+              className={['collection-item', this.props.wine && wine.id === this.props.wine.id ? 'active' : ''].join(
                 ' '
               )}>
               {wine.name}
@@ -34,27 +32,18 @@ export class WineList extends Component {
   }
 }
 
-export class WineListPage extends Component {
+export class _WineListPage extends Component {
   static contextTypes = {
     router: PropTypes.object,
   };
 
-  state = {
-    loading: false,
-    wines: [],
-  };
-
   componentDidMount() {
+    console.log(this.props.params.regionId)
+    console.log(this.props.wines);
     const region = this.props.params.regionId;
-    this.setState({ loading: true }, () => {
-      WinesService.fetchWinesFrom(region).then(wines => {
-        this.setState({
-          loading: false,
-          wines,
-        });
-      });
-    });
+    this.props.fetchWinesFrom(region);
   }
+
 
   onSelectWine = id => {
     const root =
@@ -66,13 +55,20 @@ export class WineListPage extends Component {
   };
 
   render() {
-    if (this.state.loading) {
+    if (this.props.loading) {
       return (
         <div className="center-align">
           <Loader />
         </div>
       );
     }
-    return <WineList onSelectWine={this.onSelectWine} wines={this.state.wines} wine={{}} />;
+    return <WineList onSelectWine={this.onSelectWine} wines={this.props.wines} />;
   }
 }
+
+const mapStateToProps = (state) => ({
+  wines: state.wines,
+  loading: state.loading === 'HTTP_LOADING'
+});
+
+export const WineListPage = connect(mapStateToProps, { fetchWinesFrom })(_WineListPage);

@@ -1,7 +1,8 @@
 import React, { Component } from 'react';
 import PropTypes from 'prop-types';
-import * as WinesService from '../services/Wines';
+import { fetchRegions } from '../actions';
 import { Loader } from '.';
+import { connect } from 'react-redux';
 
 export class Regions extends Component {
   onSelectRegion = (e, region) => {
@@ -10,46 +11,42 @@ export class Regions extends Component {
   };
 
   render() {
-    return (
-      <div className="col s12 m6 l4 offset-m3 offset-l4">
-        <h2 className="center-align">Regions</h2>
-        <div className="collection">
-          {this.props.regions.map(region => (
-            <a
-              key={region}
-              href="#!"
-              onClick={e => this.onSelectRegion(e, region)}
-              className={['collection-item', region === this.props.region ? 'active' : ''].join(
-                ' '
-              )}>
-              {region}
-            </a>
-          ))}
+    // console.log("region!", this.props.regions)
+    // if(!this.props.regions){
+    //   return null;
+    // }
+      return (
+        <div className="col s12 m6 l4 offset-m3 offset-l4">
+          <h2 className="center-align">Regions</h2>
+          <div className="collection">
+            {this.props.regions.map(region => (
+              <a
+                key={region}
+                href="#!"
+                onClick={e => this.onSelectRegion(e, region)}
+                className={['collection-item', region === this.props.region ? 'active' : ''].join(
+                  ' '
+                )}>
+                {region}
+              </a>
+            ))}
+          </div>
         </div>
-      </div>
-    );
+      );
+    
   }
 }
 
-export class RegionsPage extends Component {
+export class _RegionsPage extends Component {
   static contextTypes = {
     router: PropTypes.object,
   };
 
-  state = {
-    loading: false,
-    regions: [],
-  };
-
   componentDidMount() {
-    this.setState({ loading: true }, () => {
-      WinesService.fetchRegions().then(regions => {
-        this.setState({
-          loading: false,
-          regions,
-        });
-      });
-    });
+    console.log(this.props)
+    console.log(this.props.regions)
+    this.props.fetchRegions();
+
   }
 
   onSelectRegion = region => {
@@ -59,9 +56,10 @@ export class RegionsPage extends Component {
       pathname: `${root}regions/${region}`,
     });
   };
+  
 
   render() {
-    if (this.state.loading) {
+    if (this.props.loading) {
       return (
         <div className="center-align">
           <Loader />
@@ -69,7 +67,15 @@ export class RegionsPage extends Component {
       );
     }
     return (
-      <Regions onSelectRegion={this.onSelectRegion} regions={this.state.regions} region={{}} />
+      <Regions onSelectRegion={this.onSelectRegion} regions={this.props.regions} />
+
     );
   }
 }
+
+const mapStateToProps = (state) => ({
+  regions: state.regions,
+  loading: state.loading === 'HTTP_LOADING'
+});
+
+export const RegionsPage = connect(mapStateToProps, { fetchRegions })(_RegionsPage)
